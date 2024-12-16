@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    <title>Convert Excel and CSV Data to JSON</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .a {position:relative;height:100%;min-height:6em;visibility:hidden;outline:none;cursor:pointer;background-color:#1cbbc6;box-shadow:0 0 5px solid currentColor;}
+        .a:before {content:attr(data-title);position:absolute;left:0;width:100%;min-height:6em;line-height:2em;padding-top:1.5em;opacity:1;visibility:visible;text-align:center;border:0.25em dashed currentColor;transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1);overflow:visible;}
+        .a:hover:before {border-style:solid;box-shadow:inset 0px 0px 0px 0.25em currentColor;}
+        .b {background-color:#f8f9fa;border:1px solid #ced4da;border-radius:4px;padding:10px;overflow-x:auto;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <center class="py-5">
+        <h1>Convert Excel and CSV Data to JSON</h1>
+        <p class="lead">Drag and drop your Excel or CSV file here or click to upload. See the JSON below.</p>
+        <div class="form-group">
+            <input type="file" class="form-control-file a" id="inputFile" data-title="Drag and drop an Excel or CSV file or click me"
+                   accept=".xls,.xlsx,.csv">
+        </div>
+        <button class="btn btn-secondary" id="get_data">Convert to JSON</button>
+    </center>
+    <div class="table-responsive">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search for data...">
+        <table class="table table-striped table-hover">
+            <thead id="thead"></thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+    <h3 class="mt-5">JSON Output</h3>
+    <pre id="jsonOutput" class="b">No data yet. Upload and click "Convert to JSON".</pre>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+        crossorigin="anonymous"></script>
+<script>
+    (function() {
+        var a = null;
+        document.getElementById("inputFile").addEventListener("change", function(b) {
+            a = b.target.files[0];
+            b.target.setAttribute("data-title", a ? a.name : "Drag and drop an Excel or CSV file or click me");
+        });
+        document.getElementById("get_data").addEventListener("click", function() {
+            if (!a) return alert("Please select a file first!");
+            var b = a.name.split(".").pop().toLowerCase(), c = new FileReader();
+            if ("xls" === b || "xlsx" === b) c.onload = function(d) {
+                var e = new Uint8Array(d.target.result), f = XLSX.read(e, {type: "array"}), g = XLSX.utils.sheet_to_json(f.Sheets[f.SheetNames[0]]);
+                document.getElementById("jsonOutput").textContent = JSON.stringify(g, null, 2), h(g);
+            }, c.readAsArrayBuffer(a);
+            else if ("csv" === b) c.onload = function(d) {
+                var e = d.target.result.split("\n"), f = e[0].split(","), g = e.slice(1).map(function(h) {
+                    var i = h.split(",");
+                    return f.reduce(function(j, k, l) {
+                        return j[k.trim()] = i[l]?.trim(), j;
+                    }, {});
+                });
+                document.getElementById("jsonOutput").textContent = JSON.stringify(g, null, 2), h(g);
+            }, c.readAsText(a);
+            else alert("Invalid file type. Please upload an Excel or CSV file.");
+        });
+        function h(b) {
+            var c = document.getElementById("thead"), d = document.getElementById("tbody");
+            for (; d.firstChild;) d.removeChild(d.firstChild);
+            var e = Object.keys(b[0]), f = document.createElement("tr");
+            e.forEach(function(g) {
+                var h = document.createElement("th");
+                h.textContent = g, f.appendChild(h);
+            }), c.appendChild(f), b.forEach(function(g) {
+                var h = document.createElement("tr");
+                e.forEach(function(i) {
+                    var j = document.createElement("td");
+                    j.textContent = g[i], h.appendChild(j);
+                }), d.appendChild(h);
+            });
+        }
+    })();
+</script>
+</body>
+</html>
